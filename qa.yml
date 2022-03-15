@@ -1,40 +1,7 @@
 ---
-- name: Install apt packages
+- name: Install qa packages
   hosts: qa
   become: yes
   become_user: root
-  tasks:
-  - name: pip3
-    package:
-      name: python3-pip
-      state: present
-  - name: pipenv
-    package:
-      name: pipenv
-      state: present
-  - name: htop
-    package:
-      name: htop
-      state: present
-  - name: lsof
-    package:
-      name: lsof
-      state: present
-  - name: jq
-    package:
-      name: jq
-      state: present
-  - name: snapd
-    package:
-      name: snapd
-      state: present
-
-- name: Install snap packages
-  hosts: qa
-  become: yes
-  become_user: root
-  tasks:
-  - name: yq
-    community.general.snap:
-      name: yq
-      state: present
+  roles:
+    - packages
