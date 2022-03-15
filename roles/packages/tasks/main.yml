@@ -1,0 +1,10 @@
+  - name: Apt packages installation
+    package:
+      name: "{{item.name}}"
+      state: "{{item.state}}"
+    loop: "{{packages.apt}}"
+  - name: Snap packages installation
+    community.general.snap:
+      name: "{{item.name}}"
+      state: "{{item.state}}"
+    loop: "{{packages.snap}}"
