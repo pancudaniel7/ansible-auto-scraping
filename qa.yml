@@ -1,7 +1,68 @@
 ---
-- name: Install qa packages
-  hosts: qa
-  become: yes
-  become_user: root
+- name: Deploy GCP virtual machine
+  hosts: localhost
+  tags: infra
+  vars:
+    project: codesquaddev
+    region: "us-central1"
+    zone: "us-central1-a"
+    auth_kind: serviceaccount
+    service_account_file: /Users/pancudaniel/Documents/codesquaddev-1480ae3a433d.json
+    scopes: 
+      - https://www.googleapis.com/auth/compute
+  tasks:
+    - name: Create disk for qa machine
+      gcp_compute_disk:
+          name: 'instance-qa'
+          size_gb: 50
+          source_image: 'projects/ml-images/global/images/c0-deeplearning-common-cpu-v20220316-debian-10'
+          zone: "{{ zone }}"
+          project: "{{ project }}"
+          auth_kind: "{{ auth_kind }}"
+          service_account_file: "{{ service_account_file }}"
+          scopes: "{{ scopes }}"
+          state: present
+      register: disk
+    - name: allocate IP address fro qa machine
+      gcp_compute_address:
+          state: present
+          name: 'compute-address-qa'
+          region: "{{ region }}"
+          project: "{{ project }}"
+          auth_kind: "{{ auth_kind }}"
+          service_account_file: "{{ service_account_file }}"
+          scopes: "{{ scopes }}"
+      register: address
+    - name: create instance
+      gcp_compute_instance:
+          state: present
+          name: instance-qa
+          machine_type: e2-small
+          disks:
+            - auto_delete: true
+              boot: true
+              source: "{{ disk }}"
+          network_interfaces:
+              - network: null # use default
+                access_configs:
+                  - name: 'External NAT'
+                    nat_ip: "{{ address }}"
+                    type: 'ONE_TO_ONE_NAT'
+          zone: "{{ zone }}"
+          project: "{{ project }}"
+          auth_kind: "{{ auth_kind }}"
+          service_account_file: "{{ service_account_file }}"
+          scopes: "{{ scopes }}"
+      register: instance
+    - name: Wait for SSH to come up
+      wait_for: host={{ address.address }} port=22 delay=10 timeout=60
+    - name: Add host to groupname
+      add_host: hostname={{ address.address }} groupname=instance_qa_host
+- name: Manage new instances
+  hosts: instance_qa_host
+  connection: ssh
+  become: True
+  debugger: on_failed
   roles:
     - packages
+    

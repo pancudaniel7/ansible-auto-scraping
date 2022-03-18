@@ -1,0 +1,5 @@
+plugin: gcp_compute
+projects:
+  - codesquaddev
+auth_kind: serviceaccount
+service_account_file: ~/.config/gcloud/legacy_credentials/codesquaddev@gmail.com/adc.json
