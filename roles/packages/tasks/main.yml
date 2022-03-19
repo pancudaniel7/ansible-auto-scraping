@@ -1,4 +1,4 @@
-  - name: Apt packages installation
+  - name: apt packages installation
     package:
       name: "{{item.name}}"
       state: "{{item.state}}"
